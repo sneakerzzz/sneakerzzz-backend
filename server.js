@@ -11,7 +11,7 @@ const DBURL = process.env.DB
 const HOST = process.env.HOST || 'localhost'
 
 app.listen(PORT, HOST, () => {
-    console.log(`Server started on ${HOST}:${POST}`);
+    console.log(`Server started on ${HOST}:${PORT}`);
     mongoose.connect(DBURL, {
         useNewUrlParser: true,
         useUnifiedTopology: true
