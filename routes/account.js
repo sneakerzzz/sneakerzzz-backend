@@ -337,4 +337,75 @@ router.post('/change-lang', async (req, res) => {
     }
 })
 
+router.post('/create-user', async (req, res) => {
+    const { username, password, lang, role, sessionID } = req.body
+    if (username && password && lang && role && sessionID) {
+        const session = await Session.findOne({ sessionID: sessionID })
+        if (session) {
+            const user = await User.findOne({ _id: session?.userID, role: 'admin' })
+            if (user) {
+                const _username = await User.findOne({ username: username })
+                if (_username) {
+                    res.send({
+                        success: false,
+                        message: 'Username already exists'
+                    })
+                } else {
+                    const salt = bcrypt.genSaltSync(10)
+                    const hash = bcrypt.hashSync(password, salt)
+                    const user = new User({
+                        username: username,
+                        password: hash,
+                        role: role,
+                        img: 'uploads/default-avatar.png',
+                        lang: lang
+                    }).save(err => {
+                        if (!err) {
+                            const _sessionID = random(user._id)
+                            new Session({
+                                sessionID: _sessionID,
+                                userID: user._id,
+                                createdAt: new Date()
+                            }).save(err => {
+                                if (!err) {
+                                    res.send({
+                                        success: true,
+                                        message: 'Registration successful',
+                                        sessionID: _sessionID
+                                    })
+                                } else {
+                                    res.send({
+                                        success: false,
+                                        message: 'Error'
+                                    })
+                                }
+                            })
+                        } else {
+                            res.send({
+                                success: false,
+                                message: 'Error'
+                            })
+                        }
+                    })
+                }
+            } else {
+                res.send({
+                    success: false,
+                    message: 'User is not an admin'
+                })
+            }
+        } else {
+            res.send({
+                success: false,
+                message: 'Session not found'
+            })
+        }
+    } else {
+        res.send({
+            success: false,
+            message: 'Missing fields'
+        })
+    }
+})
+
 export default router
