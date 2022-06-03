@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 })
 
 const fileFilter = (req, file, cb) => {
-    if (file.mimitype === 'image/jpeg' || file.mimitype === 'image/png' || file.mimitype === 'image/webp') {
+    if (file.mimitype === 'image/jpeg' || file.mimitype === 'image/png' || file.mimitype === 'image/webp' || file.mimitype === 'image/jpg') {
         cb(null, true)
     } else {
         cb(new Error('Not an image type'), false)
@@ -32,8 +32,7 @@ const upload = multer({
     storage: storage,
     limits: {
         fileSize: 1024 * 1024 * 10
-    },
-    fileFilter: fileFilter
+    }
 })
 
 router.post('/login', async (req, res) => {
@@ -93,13 +92,15 @@ router.post('/register', async (req, res) => {
         } else {
             const salt = bcrypt.genSaltSync(10)
             const hash = bcrypt.hashSync(password, salt)
-            const user = new User({
+            let user = new User({
                 username: username,
                 password: hash,
                 role: 'user',
                 img: 'uploads/default-avatar.png',
                 lang: lang
-            }).save(err => {
+            })
+
+            user.save(err => {
                 if (!err) {
                     const _sessionID = random(user._id)
                     new Session({
@@ -276,17 +277,21 @@ router.post('/change-img', upload.single('img'), async (req, res) => {
                 { _id: session.userID },
                 { img: req.file ? req.file.path : null }
             ).then(err => {
-                if (!err) {
-                    res.send({
-                        success: true,
-                        message: 'Image has been changed successfully'
-                    })
-                } else {
-                    res.send({
-                        success: false,
-                        message: 'Error'
-                    })
-                }
+                // if (!err) {
+                //     res.send({
+                //         success: true,
+                //         message: 'Image has been changed successfully'
+                //     })
+                // } else {
+                //     res.send({
+                //         success: false,
+                //         message: 'Error'
+                //     })
+                // }
+                res.send({
+                    success: true,
+                    message: 'Image has been changed successfully'
+                })
             })
         } else {
             res.send({
@@ -311,17 +316,21 @@ router.post('/change-lang', async (req, res) => {
                 { _id: session.userID },
                 { lang: lang }
             ).then(err => {
-                if (!err) {
-                    res.send({
-                        success: true,
-                        message: 'Language has been changed successfully'
-                    })
-                } else {
-                    res.send({
-                        success: false,
-                        message: 'Error'
-                    })
-                }
+                // if (!err) {
+                //     res.send({
+                //         success: true,
+                //         message: 'Language has been changed successfully'
+                //     })
+                // } else {
+                //     res.send({
+                //         success: false,
+                //         message: 'Error'
+                //     })
+                // }
+                res.send({
+                    success: true,
+                    message: 'Language has been changed successfully'
+                })
             })
         } else {
             res.send({
