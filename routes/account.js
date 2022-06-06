@@ -202,17 +202,10 @@ router.post('/delete-session', async (req, res) => {
     const { sessionID } = req.body
     if (sessionID) {
         Session.findOneAndDelete({ sessionID: sessionID }).then(err => {
-            if (!err) {
-                res.send({
-                    success: true,
-                    message: 'Session was deleted successfully'
-                })
-            } else {
-                res.send({
-                    success: false,
-                    message: 'Error'
-                })
-            }
+            res.send({
+                success: true,
+                message: 'Session was deleted successfully'
+            })
         })
     } else {
         res.send({
