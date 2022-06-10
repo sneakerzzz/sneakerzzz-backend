@@ -36,9 +36,9 @@ const upload = multer({
 })
 
 router.post('/login', async (req, res) => {
-    const { username, password } = req.body
-    if (username && password) {
-        const user = await User.findOne({ username: username })
+    const { password, email } = req.body
+    if (password && email) {
+        const user = await User.findOne({ email: email })
         if (user) {
             if (bcrypt.compareSync(password, user.password)) {
                 const sessionID = random(user._id)
@@ -81,13 +81,13 @@ router.post('/login', async (req, res) => {
 })
 
 router.post('/register', async (req, res) => {
-    const { username, password, lang } = req.body
-    if (username && password && lang) {
-        const _username = await User.findOne({ username: username })
-        if (_username) {
+    const { username, password, lang, email } = req.body
+    if (username && password && lang && email) {
+        const _email = await User.findOne({ email: email })
+        if (_email) {
             res.send({
                 success: false,
-                message: 'Username already exists'
+                message: 'Email already exists'
             })
         } else {
             const salt = bcrypt.genSaltSync(10)
@@ -97,7 +97,8 @@ router.post('/register', async (req, res) => {
                 password: hash,
                 role: 'user',
                 img: 'uploads/default-avatar.png',
-                lang: lang
+                lang: lang,
+                email: email
             })
 
             user.save(err => {
@@ -339,18 +340,57 @@ router.post('/change-lang', async (req, res) => {
     }
 })
 
+router.post('/change-username', async (req, res) => {
+    const { sessionID, username } = req.body
+    if (sessionID && username) {
+        const session = await Session.findOne({ sessionID: sessionID })
+        if (session) {
+            User.findOneAndUpdate(
+                { _id: session.userID },
+                { username: username }
+            ).then(err => {
+                // if (!err) {
+                //     res.send({
+                //         success: true,
+                //         message: 'Language has been changed successfully'
+                //     })
+                // } else {
+                //     res.send({
+                //         success: false,
+                //         message: 'Error'
+                //     })
+                // }
+                res.send({
+                    success: true,
+                    message: 'Username has been changed successfully'
+                })
+            })
+        } else {
+            res.send({
+                success: false,
+                message: 'Session not found'
+            })
+        }
+    } else {
+        res.send({
+            success: false,
+            message: 'Missing fields'
+        })
+    }
+})
+
 router.post('/create-user', async (req, res) => {
-    const { username, password, lang, role, sessionID } = req.body
-    if (username && password && lang && role && sessionID) {
+    const { username, password, lang, role, sessionID, email } = req.body
+    if (username && password && lang && role && sessionID && email) {
         const session = await Session.findOne({ sessionID: sessionID })
         if (session) {
             const user = await User.findOne({ _id: session?.userID, role: 'admin' })
             if (user) {
-                const _username = await User.findOne({ username: username })
-                if (_username) {
+                const _email = await User.findOne({ email: email })
+                if (_email) {
                     res.send({
                         success: false,
-                        message: 'Username already exists'
+                        message: 'Email already exists'
                     })
                 } else {
                     const salt = bcrypt.genSaltSync(10)
@@ -360,7 +400,8 @@ router.post('/create-user', async (req, res) => {
                         password: hash,
                         role: role,
                         img: 'uploads/default-avatar.png',
-                        lang: lang
+                        lang: lang,
+                        email: email
                     }).save(err => {
                         if (!err) {
                             const _sessionID = random(user._id)
