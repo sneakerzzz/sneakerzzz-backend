@@ -81,39 +81,48 @@ router.post('/login', async (req, res) => {
 })
 
 router.post('/register', async (req, res) => {
-    const { username, password, lang, email } = req.body
-    if (username && password && lang && email) {
-        const _email = await User.findOne({ email: email })
-        if (_email) {
-            res.send({
-                success: false,
-                message: 'Email already exists'
-            })
-        } else {
-            const salt = bcrypt.genSaltSync(10)
-            const hash = bcrypt.hashSync(password, salt)
-            let user = new User({
-                username: username,
-                password: hash,
-                role: 'user',
-                img: 'uploads/default-avatar.png',
-                lang: lang,
-                email: email
-            })
+    const { username, password, lang, email, confirmPassword } = req.body
+    if (username && password && lang && email && confirmPassword) {
+        if (password === confirmPassword) {
+            if (email.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
+                const _email = await User.findOne({ email: email })
+                if (_email) {
+                    res.send({
+                        success: false,
+                        message: 'Email already exists'
+                    })
+                } else {
+                    const salt = bcrypt.genSaltSync(10)
+                    const hash = bcrypt.hashSync(password, salt)
+                    let user = new User({
+                        username: username,
+                        password: hash,
+                        role: 'user',
+                        img: 'uploads/default-avatar.png',
+                        lang: lang,
+                        email: email
+                    })
 
-            user.save(err => {
-                if (!err) {
-                    const _sessionID = random(user._id)
-                    new Session({
-                        sessionID: _sessionID,
-                        userID: user._id,
-                        createdAt: new Date()
-                    }).save(err => {
+                    user.save(err => {
                         if (!err) {
-                            res.send({
-                                success: true,
-                                message: 'Registration successful',
-                                sessionID: _sessionID
+                            const _sessionID = random(user._id)
+                            new Session({
+                                sessionID: _sessionID,
+                                userID: user._id,
+                                createdAt: new Date()
+                            }).save(err => {
+                                if (!err) {
+                                    res.send({
+                                        success: true,
+                                        message: 'Registration successful',
+                                        sessionID: _sessionID
+                                    })
+                                } else {
+                                    res.send({
+                                        success: false,
+                                        message: 'Error'
+                                    })
+                                }
                             })
                         } else {
                             res.send({
@@ -122,12 +131,17 @@ router.post('/register', async (req, res) => {
                             })
                         }
                     })
-                } else {
-                    res.send({
-                        success: false,
-                        message: 'Error'
-                    })
                 }
+            } else {
+                res.send({
+                    success: false,
+                    message: 'Email is not valid'
+                })
+            }
+        } else {
+            res.send({
+                success: false,
+                message: 'Passwords do not match'
             })
         }
     }
@@ -271,17 +285,6 @@ router.post('/change-img', upload.single('img'), async (req, res) => {
                 { _id: session.userID },
                 { img: req.file ? req.file.path : null }
             ).then(err => {
-                // if (!err) {
-                //     res.send({
-                //         success: true,
-                //         message: 'Image has been changed successfully'
-                //     })
-                // } else {
-                //     res.send({
-                //         success: false,
-                //         message: 'Error'
-                //     })
-                // }
                 res.send({
                     success: true,
                     message: 'Image has been changed successfully'
