@@ -231,14 +231,15 @@ router.post('/delete-session', async (req, res) => {
 })
 
 router.post('/change-password', async (req, res) => {
-    const { sessionID, password } = req.body
-    if (sessionID && password) {
+    const { sessionID, password, newPassword, confirmNewPassword } = req.body
+    if (sessionID && password && newPassword && confirmNewPassword) {
         const session = await Session.findOne({ sessionID: sessionID })
         if (session) {
-            Session.deleteMany({ userID: session.userID }).then(err => {
-                if (!err) {
+            const user = await User.findOne({ _id: session.userID })
+            if (bcrypt.compare(password, user.password)) {
+                if (newPassword === confirmNewPassword) {
                     const salt = bcrypt.genSaltSync(10)
-                    const hash = bcrypt.hashSync(password, salt)
+                    const hash = bcrypt.hashSync(newPassword, salt)
                     User.findOneAndUpdate(
                         { _id: session.userID },
                         { password: hash }
@@ -258,10 +259,58 @@ router.post('/change-password', async (req, res) => {
                 } else {
                     res.send({
                         success: false,
-                        message: 'Error'
+                        message: 'Incorrect password'
                     })
                 }
+            } else {
+                res.send({
+                    success: false,
+                    message: 'Incorrect password'
+                })
+            }
+        } else {
+            res.send({
+                success: false,
+                message: 'Session not found'
             })
+        }
+    } else {
+        res.send({
+            success: false,
+            message: 'Missing fields'
+        })
+    }
+})
+
+router.post('/change-email', async (req, res) => {
+    const { sessionID, password, newEmail } = req.body
+    if (sessionID && password && newEmail) {
+        const session = await Session.findOne({ sessionID: sessionID })
+        if (session) {
+            const user = await User.findOne({ _id: session.userID })
+            if (bcrypt.compare(password, user.password)) {
+                User.findOneAndUpdate(
+                    { _id: session.userID },
+                    { email: newEmail }
+                ).then(err => {
+                    if (!err) {
+                        res.send({
+                            success: true,
+                            message: 'Email has been changed sucessfully'
+                        })
+                    } else {
+                        res.send({
+                            success: false,
+                            message: 'Error'
+                        })
+                    }
+                })
+            } else {
+                res.send({
+                    success: false,
+                    message: 'Incorrect password'
+                })
+            }
         } else {
             res.send({
                 success: false,
