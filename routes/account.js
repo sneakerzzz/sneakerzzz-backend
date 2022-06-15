@@ -4,6 +4,7 @@ import cryptoRandomString from 'crypto-random-string'
 import multer from 'multer'
 import bcrypt from 'bcrypt'
 import Session from '../models/session.model.js'
+import nodemon from 'nodemon'
 
 const router = express.Router()
 
@@ -173,32 +174,26 @@ router.post('/login-session', async (req, res) => {
 })
 
 router.post('/delete-user', async (req, res) => {
-    const { sessionID } = req.body
+    const { sessionID, password } = req.body
     if (sessionID) {
         const session = await Session.findOneAndDelete({ sessionID: sessionID })
         if (session) {
-            User.findOneAndDelete({ _id: session.userID }).then(err => {
-                if (!err) {
+            const user = await User.findOne({ _id: session.userID })
+            if (await bcrypt.compare(password, user.password)) {
+                User.findOneAndDelete({ _id: session.userID }).then(err => {
                     Session.deleteMany({ userID: session.userID }).then(err => {
-                        if (!err) {
-                            res.send({
-                                success: true,
-                                message: 'User was deleted succesfully'
-                            })
-                        } else {
-                            res.send({
-                                success: false,
-                                message: 'Error'
-                            })
-                        }
+                        res.send({
+                            success: true,
+                            message: 'User was deleted succesfully'
+                        })
                     })
-                } else {
-                    res.send({
-                        success: false,
-                        message: 'Error'
-                    })
-                }
-            })
+                })
+            } else {
+                res.send({
+                    success: false,
+                    message: 'Incorrect password'
+                })
+            }
         } else {
             res.send({
                 success: false,
@@ -236,30 +231,30 @@ router.post('/change-password', async (req, res) => {
         const session = await Session.findOne({ sessionID: sessionID })
         if (session) {
             const user = await User.findOne({ _id: session.userID })
-            if (bcrypt.compare(password, user.password)) {
+            if (await bcrypt.compare(password, user.password)) {
                 if (newPassword === confirmNewPassword) {
-                    const salt = bcrypt.genSaltSync(10)
-                    const hash = bcrypt.hashSync(newPassword, salt)
-                    User.findOneAndUpdate(
-                        { _id: session.userID },
-                        { password: hash }
-                    ).then(err => {
-                        if (!err) {
+                    if (!(newPassword === password)) {
+                        const salt = bcrypt.genSaltSync(10)
+                        const hash = bcrypt.hashSync(newPassword, salt)
+                        User.findOneAndUpdate(
+                            { _id: session.userID },
+                            { password: hash }
+                        ).then(err => {
                             res.send({
                                 success: true,
                                 message: 'Password has been changed sucessfully'
                             })
-                        } else {
-                            res.send({
-                                success: false,
-                                message: 'Error'
-                            })
-                        }
-                    })
+                        })
+                    } else {
+                        res.send({
+                            success: false,
+                            message: 'Password already exists'
+                        })
+                    }
                 } else {
                     res.send({
                         success: false,
-                        message: 'Incorrect password'
+                        message: 'Passwords do not match'
                     })
                 }
             } else {
@@ -288,23 +283,24 @@ router.post('/change-email', async (req, res) => {
         const session = await Session.findOne({ sessionID: sessionID })
         if (session) {
             const user = await User.findOne({ _id: session.userID })
-            if (bcrypt.compare(password, user.password)) {
-                User.findOneAndUpdate(
-                    { _id: session.userID },
-                    { email: newEmail }
-                ).then(err => {
-                    if (!err) {
+            if (await bcrypt.compare(password, user.password)) {
+                const _email = await User.findOne({ email: newEmail })
+                if (_email) {
+                    res.send({
+                        success: false,
+                        message: 'Email already exists'
+                    })
+                } else {
+                    User.findOneAndUpdate(
+                        { _id: session.userID },
+                        { email: newEmail }
+                    ).then(err => {
                         res.send({
                             success: true,
                             message: 'Email has been changed sucessfully'
                         })
-                    } else {
-                        res.send({
-                            success: false,
-                            message: 'Error'
-                        })
-                    }
-                })
+                    })
+                }
             } else {
                 res.send({
                     success: false,
