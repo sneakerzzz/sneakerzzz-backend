@@ -4,6 +4,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 
 import account from './routes/account.js'
+import product from './routes/product.js'
 
 const app = express()
 
@@ -16,7 +17,8 @@ app.listen(PORT, HOST, () => {
     console.log(`Server started on ${HOST}:${PORT}`);
     mongoose.connect(DBURL, {
         useNewUrlParser: true,
-        useUnifiedTopology: true
+        useUnifiedTopology: true,
+        ignoreUndefined: true
     }).then(
         _ => {
             console.log('Successfully connected to database');
@@ -31,3 +33,4 @@ app.use(cors())
 
 app.use('/uploads', express.static('uploads'))
 app.use('/api/account', account)
+app.use('/api', product)

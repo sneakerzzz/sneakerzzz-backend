@@ -4,7 +4,6 @@ import cryptoRandomString from 'crypto-random-string'
 import multer from 'multer'
 import bcrypt from 'bcrypt'
 import Session from '../models/session.model.js'
-import nodemon from 'nodemon'
 
 const router = express.Router()
 
