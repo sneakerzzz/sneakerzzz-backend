@@ -1,10 +1,13 @@
 import mongoose from 'mongoose'
 
-const SessionSchema = mongoose.Schema({
+const SessionSchema = new mongoose.Schema({
   sessionID: String,
-  userID: String,
-  createdAt: Date,
-})
+  userID: String
+},
+  {
+    timestamps: true
+  }
+)
 
 const Session = mongoose.model('session', SessionSchema)
 

@@ -1,17 +1,23 @@
 import mongoose from 'mongoose'
 
-const ProductSchema = mongoose.Schema({
+const ProductSchema = new mongoose.Schema({
     title: String,
     description: String,
     colorway: Array,
     price: Object,
-    category: String,
+    category: Object,
     size: Array,
     images: Array,
     brand: String,
     stock: String,
-    createdAt: Date
-})
+    gender: String,
+    subCategory: Object,
+    collectionName: String
+},
+{
+    timestamps: true
+}
+)
 
 const ProductRu = mongoose.model('product_ru', ProductSchema)
 export default ProductRu
