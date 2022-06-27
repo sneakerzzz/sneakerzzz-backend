@@ -5,6 +5,8 @@ import dotenv from 'dotenv'
 
 import account from './routes/account.js'
 import product from './routes/product.js'
+import category from './routes/category.js'
+import collection from './routes/collection.js'
 
 const app = express()
 
@@ -34,3 +36,5 @@ app.use(cors())
 app.use('/uploads', express.static('uploads'))
 app.use('/api/account', account)
 app.use('/api', product)
+app.use('/api/categories', category)
+app.use('/api/collections', collection)

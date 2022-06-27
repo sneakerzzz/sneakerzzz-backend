@@ -86,3 +86,45 @@ export const createUserValidation = (req) => {
 
     return errors
 }
+
+export const createCategoryValidation = (req) => {
+    const { name, code } = req.body
+    const errors = []
+
+    if (name && code) {
+        if (name.length < 3) {
+            errors.push('Name must be longer than 3 symbols')
+        }
+
+        if (code.length < 3) {
+            errors.push('Code must be longer that 3 symbols')
+        }
+    } else {
+        errors.push('Missing fields')
+    }
+
+    return errors
+}
+
+export const createCollectionValidation = (req) => {
+    const { name, description, code } = req.body
+    const errors = []
+
+    if (name && code && description) {
+        if (name.length < 3) {
+            errors.push('Name must be longer than 3 symbols')
+        }
+
+        if (code.length < 3) {
+            errors.push('Code must be longer that 3 symbols')
+        }
+
+        if (description.length < 5) {
+            errors.push('Description must be longer that 5 symbols')
+        }
+    } else {
+        errors.push('Missing fields')
+    }
+
+    return errors
+}

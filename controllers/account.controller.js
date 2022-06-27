@@ -128,13 +128,27 @@ export const deleteUser = async (req, res) => {
             if (session) {
                 const user = await User.findOne({ _id: session.userID })
                 if (await bcrypt.compare(password, user.password)) {
-                    User.findOneAndDelete({ _id: session.userID }).then(err => {
-                        Session.deleteMany({ userID: session.userID }).then(err => {
-                            res.send({
-                                success: true,
-                                message: 'User was deleted succesfully'
+                    User.findOneAndDelete({ _id: session.userID }, (err) => {
+                        if (!err) {
+                            Session.deleteMany({ userID: session.userID }, (err) => {
+                                if (!err) {
+                                    res.send({
+                                        success: true,
+                                        message: 'User was deleted succesfully'
+                                    })
+                                } else {
+                                    res.send({
+                                        success: false,
+                                        message: 'Error'
+                                    })
+                                }
                             })
-                        })
+                        } else {
+                            res.send({
+                                success: false,
+                                message: 'Error'
+                            })
+                        }
                     })
                 } else {
                     res.send({
@@ -166,11 +180,18 @@ export const deleteSession = async (req, res) => {
     try {
         const { sessionID } = req.body
         if (sessionID) {
-            Session.findOneAndDelete({ sessionID: sessionID }).then(err => {
-                res.send({
-                    success: true,
-                    message: 'Session was deleted successfully'
-                })
+            Session.findOneAndDelete({ sessionID: sessionID }, (err) => {
+                if (!err) {
+                    res.send({
+                        success: true,
+                        message: 'Session was deleted successfully'
+                    })
+                } else {
+                    res.send({
+                        success: false,
+                        message: 'Error'
+                    })
+                }
             })
         } else {
             res.send({
@@ -192,22 +213,34 @@ export const changePassword = async (req, res) => {
         const session = await Session.findOne({ sessionID: sessionID })
         if (session) {
             const user = await User.findOne({ _id: session.userID })
-            if (await bcrypt.compare(password, user.password)) {
-                const salt = bcrypt.genSaltSync(10)
-                const hash = bcrypt.hashSync(newPassword, salt)
-                User.findOneAndUpdate(
-                    { _id: session.userID },
-                    { password: hash }
-                ).then(err => {
+            if (user) {
+                if (await bcrypt.compare(password, user.password)) {
+                    const salt = bcrypt.genSaltSync(10)
+                    const hash = bcrypt.hashSync(newPassword, salt)
+                    User.findOneAndUpdate({ _id: session.userID }, { password: hash }, (err) => {
+                        if (!err) {
+                            res.send({
+                                success: true,
+                                message: 'Password has been changed sucessfully'
+                            })
+                        } else {
+                            res.send({
+                                success: false,
+                                message: 'Error'
+                            })
+                        }
+                    }
+                    )
+                } else {
                     res.send({
-                        success: true,
-                        message: 'Password has been changed sucessfully'
+                        success: false,
+                        message: 'Incorrect password'
                     })
-                })
+                }
             } else {
                 res.send({
                     success: false,
-                    message: 'Incorrect password'
+                    message: 'User not found'
                 })
             }
         } else {
@@ -232,28 +265,39 @@ export const changeEmail = async (req, res) => {
             const session = await Session.findOne({ sessionID: sessionID })
             if (session) {
                 const user = await User.findOne({ _id: session.userID })
-                if (await bcrypt.compare(password, user.password)) {
-                    const _email = await User.findOne({ email: newEmail })
-                    if (_email) {
+                if (user) {
+                    if (await bcrypt.compare(password, user.password)) {
+                        const _email = await User.findOne({ email: newEmail })
+                        if (_email) {
+                            res.send({
+                                success: false,
+                                message: 'Email already exists'
+                            })
+                        } else {
+                            User.findOneAndUpdate({ _id: session.userID }, { email: newEmail }, (err) => {
+                                if (!err) {
+                                    res.send({
+                                        success: true,
+                                        message: 'Email has been changed sucessfully'
+                                    })
+                                } else {
+                                    res.send({
+                                        success: false,
+                                        message: 'Error'
+                                    })
+                                }
+                            })
+                        }
+                    } else {
                         res.send({
                             success: false,
-                            message: 'Email already exists'
-                        })
-                    } else {
-                        User.findOneAndUpdate(
-                            { _id: session.userID },
-                            { email: newEmail }
-                        ).then(err => {
-                            res.send({
-                                success: true,
-                                message: 'Email has been changed sucessfully'
-                            })
+                            message: 'Incorrect password'
                         })
                     }
                 } else {
                     res.send({
                         success: false,
-                        message: 'Incorrect password'
+                        message: "Error"
                     })
                 }
             } else {
@@ -281,14 +325,18 @@ export const changeImage = async (req, res) => {
     if (sessionID) {
         const session = await Session.findOne({ sessionID: sessionID })
         if (session) {
-            User.findOneAndUpdate(
-                { _id: session.userID },
-                { img: req.file ? req.file.path : null }
-            ).then(err => {
-                res.send({
-                    success: true,
-                    message: 'Image has been changed successfully'
-                })
+            User.findOneAndUpdate({ _id: session.userID }, { img: req.file ? req.file.path : null }, (err) => {
+                if (!err) {
+                    res.send({
+                        success: true,
+                        message: 'Image has been changed successfully'
+                    })
+                } else {
+                    res.send({
+                        success: false,
+                        message: 'Error'
+                    })
+                }
             })
         } else {
             res.send({
@@ -310,14 +358,18 @@ export const changeLanguage = async (req, res) => {
         if (sessionID && lang) {
             const session = await Session.findOne({ sessionID: sessionID })
             if (session) {
-                User.findOneAndUpdate(
-                    { _id: session.userID },
-                    { lang: lang }
-                ).then(err => {
-                    res.send({
-                        success: true,
-                        message: 'Language has been changed successfully'
-                    })
+                User.findOneAndUpdate({ _id: session.userID }, { lang: lang }, (err) => {
+                    if (!err) {
+                        res.send({
+                            success: true,
+                            message: 'Language has been changed successfully'
+                        })
+                    } else {
+                        res.send({
+                            success: false,
+                            message: 'Error'
+                        })
+                    }
                 })
             } else {
                 res.send({
@@ -345,14 +397,18 @@ export const changeUsername = async (req, res) => {
         if (sessionID && username) {
             const session = await Session.findOne({ sessionID: sessionID })
             if (session) {
-                User.findOneAndUpdate(
-                    { _id: session.userID },
-                    { username: username }
-                ).then(err => {
-                    res.send({
-                        success: true,
-                        message: 'Username has been changed successfully'
-                    })
+                User.findOneAndUpdate({ _id: session.userID }, { username: username }, (err) => {
+                    if (!err) {
+                        res.send({
+                            success: true,
+                            message: 'Username has been changed successfully'
+                        })
+                    } else {
+                        res.send({
+                            success: false,
+                            message: 'Error'
+                        })
+                    }
                 })
             } else {
                 res.send({

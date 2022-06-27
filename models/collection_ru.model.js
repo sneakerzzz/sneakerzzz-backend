@@ -11,5 +11,5 @@ const CollectionSchema = new mongoose.Schema({
     }
 )
 
-const CollectionEn = mongoose.model('collection_en', CollectionSchema)
-export default CollectionEn
+const CollectionRu = mongoose.model('collection_ru', CollectionSchema)
+export default CollectionRu

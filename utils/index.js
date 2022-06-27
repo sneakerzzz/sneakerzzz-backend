@@ -3,3 +3,5 @@ export { default as handleRegisterValidation } from './handleRegisterValidation.
 export { default as handleChangePasswordValidation } from './handleChangePasswordValidation.js'
 export { default as handleCreateUserValidation } from './handleCreateUserValidation.js'
 export { default as handleCheckAdmin } from './handleCheckAdmin.js'
+export { default as handleCategoryValidation } from './handleCategoryValidation.js'
+export { default as handleCollectionValidation } from './handleCollectionValidation.js'
