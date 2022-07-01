@@ -43,15 +43,17 @@ function filtersFinder(products) {
 export const getAll = async (req, res) => {
     try {
         const lang = req.query.lang ? req.query.lang : undefined
-        const filter = {
+        const filterOne = {
             colorway: req.query.colorway ? { $elemMatch: { name: { $in: req.query.colorway.split('-') } } } : undefined,
             "price.value": req.query.price ? { $gte: parseInt(req.query.price.split('-')[0]), $lte: parseInt(req.query.price.split('-')[1]) } : undefined,
             size: req.query.size ? { $elemMatch: { value: { $in: req.query.size.split('-') }, availability: true } } : undefined,
             brand: req.query.brand ? { $in: req.query.brand.split('-') } : undefined,
-            name: req.query.search ? { $regex: req.query.search } : undefined,
-            "category.code": req.query.category ? req.query.category.split('_')[1] !== 'all' ? req.query.category.split('_')[1] : undefined : undefined,
+        }
+        const filterTwo = {
+            gender: req.query.category ? req.query.category.split('_')[0].charAt(0).toUpperCase() + req.query.category.split('_')[0].slice(1) : undefined,
             "collections.code": req.query.collection ? req.query.collection : undefined,
-            gender: req.query.category ? req.query.category.split('_')[0].charAt(0).toUpperCase() + req.query.category.split('_')[0].slice(1) : undefined
+            "category.code": req.query.category ? req.query.category.split('_')[1] !== 'all' ? req.query.category.split('_')[1] : undefined : undefined,
+            name: req.query.search ? { $regex: req.query.search } : undefined,
         }
         const priceSortBy = req.query.priceSortBy ? { "price.value": req.query.priceSortBy } : undefined
         const dateSortBy = req.query.dateSortBy ? { createdAt: req.query.dateSortBy } : undefined
@@ -61,10 +63,10 @@ export const getAll = async (req, res) => {
 
         if (lang) {
             if (lang === 'en') {
-                const products = await ProductEn.find(filter).sort(sortBy).skip((page - 1) * limit).limit(limit)
-                const productsCategories = await ProductEn.find({})
-                const totalResults = await ProductEn.find(filter).sort(sortBy).count()
-                const totalPages = (totalResults + limit - 1)/limit
+                const products = await ProductEn.find(filterOne).find(filterTwo).sort(sortBy).skip((page - 1) * limit).limit(limit)
+                const productsCategories = await ProductEn.find(filterTwo)
+                const totalResults = await ProductEn.find(filterOne).find(filterTwo).sort(sortBy).count()
+                const totalPages = Math.ceil(totalResults / limit)
                 const previousPage = (page - 1) > 0 ? page - 1 : undefined
                 const nextPage = (page + 1) <= totalPages ? page + 1 : undefined
                 const currentPage = page <= totalPages ? page : undefined
@@ -84,10 +86,10 @@ export const getAll = async (req, res) => {
                     }
                 })
             } else if (lang === 'ru') {
-                const products = await ProductRu.find(filter).sort(sortBy).skip((page - 1) * limit).limit(limit)
-                const productsCategories = await ProductRu.find({})
-                const totalResults = await ProductRu.find(filter).sort(sortBy).count()
-                const totalPages = Math.round(totalResults / limit)
+                const products = await ProductRu.find(filterOne).find(filterTwo).sort(sortBy).skip((page - 1) * limit).limit(limit)
+                const productsCategories = await ProductRu.find(filterTwo)
+                const totalResults = await ProductRu.find(filterOne).find(filterTwo).sort(sortBy).count()
+                const totalPages = Math.ceil(totalResults / limit)
                 const previousPage = (page - 1) > 0 ? page - 1 : undefined
                 const nextPage = (page + 1) <= totalPages ? page + 1 : undefined
                 const currentPage = page <= totalPages ? page : undefined
