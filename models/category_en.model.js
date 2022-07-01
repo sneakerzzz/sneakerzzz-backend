@@ -3,10 +3,16 @@ import mongoose from "mongoose";
 const CategorySchema = new mongoose.Schema({
     name: String,
     code: String,
-    subCategories: [
+    сategories: [
         {
             name: String,
-            code: String 
+            code: String,
+            categories: [
+                {
+                    name: String,
+                    code: String,
+                }
+            ]
         }
     ]
 },

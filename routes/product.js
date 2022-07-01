@@ -24,15 +24,7 @@ const router = express.Router()
 //     }
 // })
 
-router.get('/products/:gender/', ProductController.getAll)
-
-router.post('/add', async (req, res) => {
-
-})
-
-router.post('/delete', async (req, res) => {
-
-})
+router.get('/products/:sort/', ProductController.getAll)
 
 
 export default router

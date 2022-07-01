@@ -15,11 +15,11 @@ function filtersFinder(products) {
         })
         element.size.forEach(element => {
             if (element.availability === true) {
-                sizes.push(element.name)
+                sizes.push(element.value)
             }
         })
         brands.push(element.brand)
-        prices.push(element.price.number)
+        prices.push(element.price.value)
 
         const sorted = prices.slice().sort((a, b) => {
             return a - b
@@ -45,15 +45,15 @@ export const getAll = async (req, res) => {
         const lang = req.query.lang ? req.query.lang : undefined
         const filter = {
             colorway: req.query.colorway ? { $elemMatch: { name: { $in: req.query.colorway.split('-') } } } : undefined,
-            "price.number": req.query.price ? { $gte: req.query.price.split('-')[0], $lte: req.query.price.split('-')[1] } : undefined,
-            size: req.query.size ? { $elemMatch: { name: { $in: req.query.size.split('-') }, availability: true } } : undefined,
+            "price.value": req.query.price ? { $gte: parseInt(req.query.price.split('-')[0]), $lte: parseInt(req.query.price.split('-')[1]) } : undefined,
+            size: req.query.size ? { $elemMatch: { value: { $in: req.query.size.split('-') }, availability: true } } : undefined,
             brand: req.query.brand ? { $in: req.query.brand.split('-') } : undefined,
-            title: req.query.search ? { $regex: req.query.search } : undefined,
-            gender: req.params.gender ? req.params.gender !== 'all' ? req.params.gender.charAt(0).toUpperCase() + req.params.gender.slice(1) : undefined : undefined,
-            "category.code": req.query.category ? req.query.category : undefined,
-            "subCategory.code": req.query.subCategory ? req.query.subCategory : undefined,
+            name: req.query.search ? { $regex: req.query.search } : undefined,
+            "category.code": req.query.category ? req.query.category.split('_')[1] !== 'all' ? req.query.category.split('_')[1] : undefined : undefined,
+            "collections.code": req.query.collection ? req.query.collection : undefined,
+            gender: req.query.category ? req.query.category.split('_')[0].charAt(0).toUpperCase() + req.query.category.split('_')[0].slice(1) : undefined
         }
-        const priceSortBy = req.query.priceSortBy ? { "price.number": req.query.priceSortBy } : undefined
+        const priceSortBy = req.query.priceSortBy ? { "price.value": req.query.priceSortBy } : undefined
         const dateSortBy = req.query.dateSortBy ? { createdAt: req.query.dateSortBy } : undefined
         const sortBy = priceSortBy || dateSortBy
         const page = req.query.page ? parseInt(req.query.page) : undefined
@@ -64,7 +64,7 @@ export const getAll = async (req, res) => {
                 const products = await ProductEn.find(filter).sort(sortBy).skip((page - 1) * limit).limit(limit)
                 const productsCategories = await ProductEn.find({})
                 const totalResults = await ProductEn.find(filter).sort(sortBy).count()
-                const totalPages = Math.round(totalResults / limit)
+                const totalPages = (totalResults + limit - 1)/limit
                 const previousPage = (page - 1) > 0 ? page - 1 : undefined
                 const nextPage = (page + 1) <= totalPages ? page + 1 : undefined
                 const currentPage = page <= totalPages ? page : undefined
@@ -72,9 +72,9 @@ export const getAll = async (req, res) => {
                 res.send({
                     success: true,
                     data: products,
-                    filters: filtersFinder(productsCategories),
+                    facets: filtersFinder(productsCategories),
                     message: "Products have been retrieved successfully",
-                    results: {
+                    pagination: {
                         totalResults: totalResults,
                         totalPages: totalPages,
                         previousPage: previousPage,
@@ -95,9 +95,9 @@ export const getAll = async (req, res) => {
                 res.send({
                     success: true,
                     data: products,
-                    filters: filtersFinder(productsCategories),
+                    facets: filtersFinder(productsCategories),
                     message: "Products have been retrieved successfully",
-                    results: {
+                    pagination: {
                         totalResults: totalResults,
                         totalPages: totalPages,
                         previousPage: previousPage,
