@@ -24,7 +24,8 @@ const router = express.Router()
 //     }
 // })
 
-router.get('/products/:sort/', ProductController.getAll)
+router.get('/products/:sort', ProductController.getAll)
+router.get('product/:id', ProductController.getOne)
 
 
 export default router

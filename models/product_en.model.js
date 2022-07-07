@@ -20,7 +20,7 @@ const ProductSchema = new mongoose.Schema({
     },
     size: [
         {
-            value: Number,
+            value: String,
             availability: Boolean
         }
     ],
@@ -31,7 +31,8 @@ const ProductSchema = new mongoose.Schema({
     collections: {
         name: String,
         code: String
-    }
+    },
+    views: Number
 },
     {
         timestamps: true

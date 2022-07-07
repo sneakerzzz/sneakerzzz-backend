@@ -42,7 +42,7 @@ function filtersFinder(products) {
 
 export const getAll = async (req, res) => {
     try {
-        const lang = req.query.lang ? req.query.lang : undefined
+        const lang = req.query.lang
         const filterOne = {
             colorway: req.query.colorway ? { $elemMatch: { name: { $in: req.query.colorway.split('-') } } } : undefined,
             "price.value": req.query.price ? { $gte: parseInt(req.query.price.split('-')[0]), $lte: parseInt(req.query.price.split('-')[1]) } : undefined,
@@ -55,70 +55,115 @@ export const getAll = async (req, res) => {
             "category.code": req.query.category ? req.query.category.split('_')[1] !== 'all' ? req.query.category.split('_')[1] : undefined : undefined,
             name: req.query.search ? { $regex: req.query.search } : undefined,
         }
-        const priceSortBy = req.query.priceSortBy ? { "price.value": req.query.priceSortBy } : undefined
-        const dateSortBy = req.query.dateSortBy ? { createdAt: req.query.dateSortBy } : undefined
-        const sortBy = priceSortBy || dateSortBy
+        const sortBy = req.query.sortBy ? { "price.value": req.query.sortBy } : undefined
         const page = req.query.page ? parseInt(req.query.page) : undefined
         const limit = req.query.limit ? parseInt(req.query.limit) : undefined
+        const sort = req.params.sort ? req.params.sort !== 'all' ? req.params.sort === 'new_arrivals' ? { createdAt: 1 } : req.params.sort === 'trendings' ? { views: 1 } : undefined : undefined : undefined
 
-        if (lang) {
-            if (lang === 'en') {
-                const products = await ProductEn.find(filterOne).find(filterTwo).sort(sortBy).skip((page - 1) * limit).limit(limit)
-                const productsCategories = await ProductEn.find(filterTwo)
-                const totalResults = await ProductEn.find(filterOne).find(filterTwo).sort(sortBy).count()
-                const totalPages = Math.ceil(totalResults / limit)
-                const previousPage = (page - 1) > 0 ? page - 1 : undefined
-                const nextPage = (page + 1) <= totalPages ? page + 1 : undefined
-                const currentPage = page <= totalPages ? page : undefined
+        if (lang === 'en') {
+            const products = await ProductEn.find(filterOne).find(filterTwo).sort(sortBy).sort(sort).skip((page - 1) * limit).limit(limit)
+            const productsCategories = await ProductEn.find(filterTwo).sort(sortBy).sort(sort)
+            const totalResults = await ProductEn.find(filterOne).find(filterTwo).sort(sortBy).sort(sort).count()
+            const totalPages = Math.ceil(totalResults / limit)
+            const previousPage = (page - 1) > 0 ? page - 1 : undefined
+            const nextPage = (page + 1) <= totalPages ? page + 1 : undefined
+            const currentPage = page <= totalPages ? page : undefined
 
-                res.send({
-                    success: true,
-                    data: products,
-                    facets: filtersFinder(productsCategories),
-                    message: "Products have been retrieved successfully",
-                    pagination: {
-                        totalResults: totalResults,
-                        totalPages: totalPages,
-                        previousPage: previousPage,
-                        currentPage: currentPage,
-                        nextPage: nextPage,
-                        limit: limit
-                    }
-                })
-            } else if (lang === 'ru') {
-                const products = await ProductRu.find(filterOne).find(filterTwo).sort(sortBy).skip((page - 1) * limit).limit(limit)
-                const productsCategories = await ProductRu.find(filterTwo)
-                const totalResults = await ProductRu.find(filterOne).find(filterTwo).sort(sortBy).count()
-                const totalPages = Math.ceil(totalResults / limit)
-                const previousPage = (page - 1) > 0 ? page - 1 : undefined
-                const nextPage = (page + 1) <= totalPages ? page + 1 : undefined
-                const currentPage = page <= totalPages ? page : undefined
-
-                res.send({
-                    success: true,
-                    data: products,
-                    facets: filtersFinder(productsCategories),
-                    message: "Products have been retrieved successfully",
-                    pagination: {
-                        totalResults: totalResults,
-                        totalPages: totalPages,
-                        previousPage: previousPage,
-                        currentPage: currentPage,
-                        nextPage: nextPage,
-                        limit: limit
-                    }
-                })
-            } else {
-                res.send({
-                    success: false,
-                    message: 'Language is undefined'
-                })
-            }
-        } else {
             res.send({
-                success: false,
-                message: 'Language is required'
+                success: true,
+                data: products,
+                facets: filtersFinder(productsCategories),
+                message: "Products have been retrieved successfully",
+                pagination: {
+                    totalResults: totalResults,
+                    totalPages: totalPages,
+                    previousPage: previousPage,
+                    currentPage: currentPage,
+                    nextPage: nextPage,
+                    limit: limit
+                }
             })
+        } else if (lang === 'ru') {
+            const products = await ProductRu.find(filterOne).find(filterTwo).sort(sortBy).sort(sort).skip((page - 1) * limit).limit(limit)
+            const productsCategories = await ProductRu.find(filterTwo).sort(sortBy).sort(sort)
+            const totalResults = await ProductRu.find(filterOne).find(filterTwo).sort(sortBy).sort(sort).count()
+            const totalPages = Math.ceil(totalResults / limit)
+            const previousPage = (page - 1) > 0 ? page - 1 : undefined
+            const nextPage = (page + 1) <= totalPages ? page + 1 : undefined
+            const currentPage = page <= totalPages ? page : undefined
+
+            res.send({
+                success: true,
+                data: products,
+                facets: filtersFinder(productsCategories),
+                message: "Продукты были успешно доставлены",
+                pagination: {
+                    totalResults: totalResults,
+                    totalPages: totalPages,
+                    previousPage: previousPage,
+                    currentPage: currentPage,
+                    nextPage: nextPage,
+                    limit: limit
+                }
+            })
+        }
+    } catch (err) {
+        res.send({
+            success: false,
+            message: 'Error'
+        })
+    }
+}
+
+export const getOne = async (req, res) => {
+    try {
+        const lang = req.query.lang
+        if (lang === 'en') {
+            const _id = req.params.id
+
+            ProductEn.findOneAndUpdate({ _id: _id }, {
+                $inc: { views: 1 }
+            },
+                {
+                    returnDocument: 'after'
+                },
+                (err, doc) => {
+                    if (!err) {
+                        res.send({
+                            success: true,
+                            message: 'Product has been retrieved successfully',
+                            data: doc
+                        })
+                    } else {
+                        res.send({
+                            success: false,
+                            message: 'Error'
+                        })
+                    }
+                })
+        } else if (lang === 'ru') {
+            const _id = req.params.id
+
+            ProductRu.findOneAndUpdate({ _id: _id }, {
+                $inc: { views: 1 }
+            },
+                {
+                    returnDocument: 'after'
+                },
+                (err, doc) => {
+                    if (!err) {
+                        res.send({
+                            success: true,
+                            message: 'Продукт был успешно доставлен',
+                            data: doc
+                        })
+                    } else {
+                        res.send({
+                            success: false,
+                            message: 'Ошибка'
+                        })
+                    }
+                })
         }
     } catch (err) {
         res.send({
