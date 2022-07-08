@@ -61,7 +61,7 @@ export const createOne = async (req, res) => {
         if (lang === 'en') {
             const { name, description, code } = req.body
             const imagesArray = []
-            req.files.images.forEach(file => {
+            req.files.forEach(file => {
                 imagesArray.push(file.path)
             })
 
@@ -86,7 +86,7 @@ export const createOne = async (req, res) => {
         } else if (lang === 'ru') {
             const { name, description, code } = req.body
             const imagesArray = []
-            req.files.images.forEach(file => {
+            req.files.forEach(file => {
                 imagesArray.push(file.path)
             })
 
