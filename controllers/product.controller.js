@@ -58,7 +58,7 @@ export const getAll = async (req, res) => {
         const sortBy = req.query.sortBy ? { "price.value": req.query.sortBy } : undefined
         const page = req.query.page ? parseInt(req.query.page) : undefined
         const limit = req.query.limit ? parseInt(req.query.limit) : undefined
-        const sort = req.params.sort ? req.params.sort !== 'all' ? req.params.sort === 'new_arrivals' ? { createdAt: 1 } : req.params.sort === 'trendings' ? { views: 1 } : undefined : undefined : undefined
+        const sort = req.params.sort ? req.params.sort !== 'all' ? req.params.sort === 'new_arrivals' ? { createdAt: 1 } : req.params.sort === 'trendings' ? { views: -1 } : undefined : undefined : undefined
 
         if (lang === 'en') {
             const products = await ProductEn.find(filterOne).find(filterTwo).sort(sortBy).sort(sort).skip((page - 1) * limit).limit(limit)

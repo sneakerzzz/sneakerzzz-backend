@@ -30,7 +30,8 @@ const ProductSchema = new mongoose.Schema({
     gender: String,
     collections: {
         name: String,
-        code: String
+        code: String,
+        description: String
     },
     views: Number
 },

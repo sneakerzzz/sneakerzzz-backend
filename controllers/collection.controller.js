@@ -5,14 +5,14 @@ export const getAll = async (req, res) => {
     try {
         const lang = req.query.lang
         if (lang === 'en') {
-            const collections = await CollectionEn.find({})
+            const collections = await CollectionEn.find({}).sort({ createdAt: -1 })
             res.send({
                 success: true,
                 data: collections,
                 message: "Collections have been retrieved successfully",
             })
         } else if (lang === 'ru') {
-            const collections = await CollectionRu.find({})
+            const collections = await CollectionRu.find({}).sort({ createdAt: -1 })
             res.send({
                 success: true,
                 data: collections,
@@ -122,11 +122,16 @@ export const updateOne = async (req, res) => {
         const lang = req.query.lang
         if (lang === 'en') {
             const { _id, name, code, description } = req.body
+            const imagesArray = []
+            req.files.forEach(file => {
+                imagesArray.push(file.path)
+            })
 
             CollectionEn.findOneAndUpdate({ _id: _id }, {
                 name: name,
                 code: code,
-                description: description
+                description: description,
+                images: imagesArray
             },
                 (err) => {
                     if (!err) {
@@ -143,11 +148,16 @@ export const updateOne = async (req, res) => {
                 })
         } else if (lang === 'ru') {
             const { _id, name, code, description } = req.body
+            const imagesArray = []
+            req.files.forEach(file => {
+                imagesArray.push(file.path)
+            })
 
             CollectionRu.findOneAndUpdate({ _id: _id }, {
                 name: name,
                 code: code,
-                description: description
+                description: description,
+                images: imagesArray
             },
                 (err) => {
                     if (!err) {
