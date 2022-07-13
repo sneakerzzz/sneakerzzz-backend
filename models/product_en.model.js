@@ -25,9 +25,8 @@ const ProductSchema = new mongoose.Schema({
         }
     ],
     images: [String],
-    brand: String,
-    stock: String,
-    gender: String,
+    brand: [String],
+    stock: Boolean,
     collections: {
         name: String,
         code: String,

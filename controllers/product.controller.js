@@ -50,7 +50,6 @@ export const getAll = async (req, res) => {
             brand: req.query.brand ? { $in: req.query.brand.split('-') } : undefined,
         }
         const filterTwo = {
-            gender: req.query.category ? req.query.category.split('_')[0].charAt(0).toUpperCase() + req.query.category.split('_')[0].slice(1) : undefined,
             "collections.code": req.query.collection ? req.query.collection : undefined,
             "category.code": req.query.category ? req.query.category.split('_')[1] !== 'all' ? req.query.category.split('_')[1] : undefined : undefined,
             name: req.query.search ? { $regex: req.query.search } : undefined,
